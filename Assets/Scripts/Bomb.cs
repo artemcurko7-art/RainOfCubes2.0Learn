@@ -3,71 +3,56 @@ using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-[RequireComponent(typeof(Rigidbody), typeof(MeshRenderer))]
-public class Bomb : MonoBehaviour
+public class Bomb : Prefab
 {
-    [SerializeField] private float _radiusExplosion;
-    [SerializeField] private float _repeatRateTransparency;
+    [SerializeField] private LayerMask _prefabMask;
+    [SerializeField] private float _explosionForce;
+    [SerializeField] private float _explosionRadius;
 
     private readonly int _minRange = 2;
     private readonly int _maxRange = 5;
 
-    private Rigidbody _rigidbody;
-    private MeshRenderer _meshRenderer;
-    private Color _color;
-
-    private float _currentTimer;
-    private float _repeatRateTimer;
+    private Collider[] _colliders = new Collider[32];
 
     public event Action<Bomb> Activated;
 
-    private void Awake()
+    public override void Initialize(Vector3 position)
     {
-        _rigidbody = GetComponent<Rigidbody>();
-        _meshRenderer = GetComponent<MeshRenderer>();
-        _color = _meshRenderer.material.color;
+        base.Initialize(position);
+        StartCoroutine(ChangeTransparency(GetRandomDuration()));
     }
 
-    private void OnEnable()
+    private IEnumerator ChangeTransparency(float duration)
     {
-        Activated?.Invoke(this);
-    }
+        float colorA = 1;
 
-    public void Initialize(Vector3 position)
-    {
-        transform.position = position;
-        int time = GetRandomTime();
-        StartCoroutine(ChangeTransparency(time));
-    }
-
-    public void ResetSettings()
-    {        
-        transform.rotation = Quaternion.identity;
-        _rigidbody.angularVelocity = Vector3.zero;
-        _rigidbody.linearVelocity = Vector3.zero;
-        _meshRenderer.material.color = _color;
-    }
-
-    //private void Explose()
-    //{
-    //    Collider[] colliders = Physics.OverlapSphereNonAlloc(transform.position, _radiusExplosion);
-    //}
-
-    private IEnumerator ChangeTransparency(float time)
-    {
-        float a = 1;
-
-        while (_color.a != 0)
+        while (colorA > 0)
         {
-            a = Mathf.MoveTowards(1, 0, time * Time.deltaTime);
-            //_meshRenderer.material.color = new Color(_color.r, _color.g, _color.b, a);
-            Debug.Log($"Change: {_color.a > 0}, color: {a}");
+            colorA = Mathf.MoveTowards(colorA, 0, duration * Time.deltaTime);
+            MeshRenderer.material.color = new Color(Color.r, Color.g, Color.b, colorA);
             yield return null;
         }
+
+        Explose();
 
         yield break;
     }
 
-    private int GetRandomTime() =>
+    private void Explose()
+    {
+        int result = Physics.OverlapSphereNonAlloc(transform.position, _explosionRadius, _colliders, _prefabMask);
+
+        for (int i = 0; i < result; i++)
+        {
+            if (_colliders[i].TryGetComponent<Rigidbody>(out Rigidbody rigidbody))
+            {
+                rigidbody.AddExplosionForce(_explosionForce, transform.position, _explosionRadius);
+            }
+        }
+
+        Activated?.Invoke(this);
+    }
+
+    private int GetRandomDuration() =>
         Random.Range(_minRange, _maxRange + 1);
 }

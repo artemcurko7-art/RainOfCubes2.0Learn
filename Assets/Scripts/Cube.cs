@@ -3,28 +3,11 @@ using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-[RequireComponent(typeof(Rigidbody), typeof(MeshRenderer))]
-public class Cube : MonoBehaviour
+public class Cube : Prefab
 {
-    private Rigidbody _rigidbody;
-    private MeshRenderer _meshRenderer;
-    private Color _color;
-
     public event Action<Cube> Collided;
 
     public bool IsCollision { get; private set; }
-
-    public void Initialize(Vector3 position)
-    { 
-        transform.position = position;
-    }
-
-    private void Awake()
-    {
-        _rigidbody = GetComponent<Rigidbody>();
-        _meshRenderer = GetComponent<MeshRenderer>();
-        _color = _meshRenderer.material.color;
-    }
 
     private IEnumerator StartWait()
     {
@@ -51,18 +34,15 @@ public class Cube : MonoBehaviour
             if (IsCollision == false)
             {
                 IsCollision = true;
-                _meshRenderer.material.color = Random.ColorHSV();
+                MeshRenderer.material.color = Random.ColorHSV();
                 StartCoroutine(StartWait());
             }
         }
     }
 
-    public void ResetSettings()
+    public override void ResetSettings()
     {
-        _meshRenderer.material.color = _color;
-        transform.rotation = Quaternion.identity;
-        _rigidbody.angularVelocity = Vector3.zero;
-        _rigidbody.linearVelocity = Vector3.zero;
+        base.ResetSettings();
         IsCollision = false;
     }
 }

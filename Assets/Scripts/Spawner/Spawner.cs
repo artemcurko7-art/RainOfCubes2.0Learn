@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -8,6 +7,9 @@ public abstract class Spawner <T>: MonoBehaviour where T : MonoBehaviour
     [SerializeField] private T _prefab;
 
     private ObjectPool<T> _pool;
+    private int _amountSpawnedObjects;
+
+    public event Action<int, int, int> Viewed;
 
     private void Awake()
     {
@@ -17,8 +19,12 @@ public abstract class Spawner <T>: MonoBehaviour where T : MonoBehaviour
             actionOnRelease: (prefab) => ActionOnRelease(prefab));    
     }
 
-    public virtual void ActionOnGet(T prefab) =>
+    public virtual void ActionOnGet(T prefab)
+    {
         prefab.gameObject.SetActive(true);
+        _amountSpawnedObjects++;
+        Viewed?.Invoke(_amountSpawnedObjects, _pool.CountAll, _pool.CountActive);
+    }
 
     public virtual void ActionOnRelease(T prefab) =>
         prefab.gameObject.SetActive(false);

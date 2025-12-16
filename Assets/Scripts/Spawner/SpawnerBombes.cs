@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class SpawnerBombes : Spawner<Bomb>
@@ -32,8 +33,6 @@ public class SpawnerBombes : Spawner<Bomb>
         bomb.Activated -= OnRelease;
     }
 
-    private void DisableCube(Cube cube)
-    {
+    private void DisableCube(Cube cube) =>
         GetPrefab().Initialize(cube.transform.position);
-    }
 }

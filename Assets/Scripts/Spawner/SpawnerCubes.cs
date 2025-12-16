@@ -7,7 +7,7 @@ public class SpawnerCubes : Spawner<Cube>
 {
     [SerializeField] private float _repeatRate;
 
-    public event Action<Cube> Disabled;
+    public event Action<Cube> Disabled;  
 
     private void Start()
     {
